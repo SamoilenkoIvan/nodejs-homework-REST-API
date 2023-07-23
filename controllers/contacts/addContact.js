@@ -1,4 +1,4 @@
-const Contact = require('../models/contacts');
+const Contact = require('../../models/contacts');
 const addContact = async (req, res) => {
   const { name, email, phone } = req.body;
   const { error } = contactValidation.validate(req.body);
