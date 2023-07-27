@@ -17,10 +17,25 @@ const usersRouter = require('./routes/api/users');
 const app = express()
 const authMiddleware = require('./middlewares/auth');
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short'
+const multer = require('multer');
+const path = require('path');
 
 app.use(logger(formatsLogger))
 app.use(cors())
 app.use(express.json())
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/avatars');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
+
+app.use(express.static('public'));
 
 app.use('/api/contacts', authMiddleware, contactsRouter);
 app.use('/api/users', authMiddleware, usersRouter);

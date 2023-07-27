@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const userValidation = require('../schemas/userValidation');
 
+const gravatar = require('gravatar');
+
 const registerUser = async (req, res) => {
   const { email, password } = req.body;
   const { error } = userValidation.validate(req.body);
@@ -19,15 +21,45 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    
+    const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
+
     const newUser = new User({
       email,
       password: hashedPassword,
       subscription: 'starter',
+      avatarURL, 
     });
 
     await newUser.save();
 
     return res.status(201).json({ user: { email, subscription: 'starter' } });
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const updateUserAvatar = async (req, res) => {
+  try {
+    const tmpPath = req.file.path; 
+    
+    const resizedAvatar = await Jimp.read(tmpPath);
+    resizedAvatar.resize(250, 250);
+
+    
+    const avatarName = `${req.user._id}-${Date.now()}.png`;
+    const avatarPath = path.join(__dirname, '..', 'public', 'avatars', avatarName);
+    await resizedAvatar.writeAsync(avatarPath);
+
+    
+    await fs.unlink(tmpPath);
+
+    
+    const user = await User.findById(req.user._id);
+    user.avatarURL = `/avatars/${avatarName}`;
+    await user.save();
+
+    return res.status(200).json({ avatarURL: user.avatarURL });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error' });
   }
@@ -52,7 +84,7 @@ const loginUser = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user._id }, 'your-secret-key', {
-      expiresIn: '1h', // Token expires in 1 hour
+      expiresIn: '1h', 
     });
 
     user.token = token;
@@ -101,6 +133,7 @@ const getCurrentUser = async (req, res) => {
 
 module.exports = {
   registerUser,
+  updateUserAvatar,
   loginUser,
   logoutUser,
   getCurrentUser,
