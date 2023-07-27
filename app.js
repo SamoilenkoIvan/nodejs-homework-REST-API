@@ -14,6 +14,7 @@ const cors = require('cors')
 
 const contactsRouter = require('./routes/api/contacts')
 const usersRouter = require('./routes/api/users');
+const userRoutes = require('./routes/api/users');
 const app = express()
 const authMiddleware = require('./middlewares/auth');
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short'
@@ -24,6 +25,7 @@ app.use(express.json())
 
 app.use('/api/contacts', authMiddleware, contactsRouter);
 app.use('/api/users', authMiddleware, usersRouter);
+app.use('/api/users', userRoutes);
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' })
 })
