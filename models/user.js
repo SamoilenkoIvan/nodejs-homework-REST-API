@@ -13,29 +13,16 @@ const userSchema = new Schema({
     type: String,
     required: [true, 'Set password for user'],
   },
+  password: {
+    type: String,
+    required: [true, 'Set password for user'],
+  },
   subscription: {
     type: String,
     enum: ["starter", "pro", "business"],
     default: "starter"
   },
-  token: String,
-  avatarURL: String,
-  verify: {
-    type: Boolean,
-    default: false,
-  },
-  verificationToken: {
-    type: String,
-    default: uuidv4(), 
-  },
-});
-
-
-userSchema.pre('save', function (next) {
-  if (!this.avatarURL) {
-    this.avatarURL = gravatar.url(this.email, { s: '200', r: 'pg', d: 'mm' });
-  }
-  next();
+  token: String
 });
 
 const User = mongoose.model('User', userSchema);

@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const userValidation = require('../schemas/userValidation');
 
+const gravatar = require('gravatar');
+
 const registerUser = async (req, res) => {
   const { email, password } = req.body;
   const { error } = userValidation.validate(req.body);
@@ -20,6 +22,9 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    
+    const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
+
     const newUser = new User({
       email,
       password: hashedPassword,
@@ -33,27 +38,6 @@ const registerUser = async (req, res) => {
     sendVerificationEmail(newUser.email, newUser.verificationToken);
 
     return res.status(201).json({ user: { email, subscription: 'starter' } });
-  } catch (error) {
-    return res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-const verifyUser = async (req, res) => {
-  const { verificationToken } = req.params;
-
-  try {
-    const user = await User.findOne({ verificationToken });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    
-    user.verificationToken = null;
-    user.verify = true;
-    await user.save();
-
-    return res.status(200).json({ message: 'Verification successful' });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error' });
   }
@@ -182,7 +166,6 @@ const resendVerificationEmail = async (req, res) => {
 
 module.exports = {
   registerUser,
-  // updateUserAvatar,
   loginUser,
   logoutUser,
   getCurrentUser,
