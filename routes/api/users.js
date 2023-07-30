@@ -7,6 +7,7 @@ router.post('/register', usersController.registerUser);
 router.post('/login', usersController.loginUser);
 router.post('/logout', authMiddleware, usersController.logoutUser);
 router.get('/current', authMiddleware, usersController.getCurrentUser);
+router.get('/verify/:verificationToken', usersController.verifyUser);
 
 module.exports = router;
 
